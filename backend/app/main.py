@@ -1,55 +1,33 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import Response
-from pydantic import BaseModel
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.tts_engine import tts_engine
-import uuid
-import traceback
+from app.database import engine, Base
+from app.api.v1 import auth_router, admin_router, tts_router
+from app.config import settings
 
-app = FastAPI(title="AI Voice Platform API", version="1.0")
+Base.metadata.create_all(bind=engine)
 
+app = FastAPI(
+    title=settings.APP_NAME,
+    description="AI Voice Platform",
+    version="1.0.0"
+)
+
+# ✅ CORS - Allow localhost:3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class TTSRequest(BaseModel):
-    text: str
-    voice: str = "af_heart"
-    emotion: str | None = None
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(tts_router, prefix="/api/v1/tts", tags=["TTS"])
 
 @app.get("/")
 def root():
-    return {"message": "AI Voice API is running. Use /tts/generate"}
-
-@app.post("/tts/generate")
-async def generate_speech(request: TTSRequest):
-    try:
-        if not request.text or len(request.text.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Text cannot be empty")
-
-        audio_bytes, sample_rate, duration = tts_engine.generate(
-            text=request.text,
-            voice=request.voice,
-            emotion=request.emotion
-        )
-
-        return Response(
-            content=audio_bytes,
-            media_type="audio/wav",
-            headers={
-                "Content-Disposition": f"attachment; filename=speech_{uuid.uuid4().hex[:8]}.wav",
-                "X-Duration": str(duration)
-            }
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        traceback.print_exc()  # poora error terminal mein print hoga
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"message": f"Welcome to {settings.APP_NAME} API", "docs": "/docs"}
 
 if __name__ == "__main__":
     import uvicorn
