@@ -1,0 +1,27 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Models and generated data - MUST be excluded from build context
+# These are mounted as volumes at runtime, not copied into the image
+models_data/
+uploads/
+outputs/
+
+# Git
+.git/
+.gitignore

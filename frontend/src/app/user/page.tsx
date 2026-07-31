@@ -737,14 +737,254 @@
 //   );
 // }
 
+// 'use client';
+
+// import { useState, useEffect } from 'react';
+// import { useAuth } from '../../context/AuthContext';
+// import Cookies from 'js-cookie';
+
+// // ✅ Direct call to backend (no proxy issues)
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000/api';
+
+// const VOICES = [
+//   { id: 'af_heart', name: 'Heart (Female)' },
+//   { id: 'af_bella', name: 'Bella (Female)' },
+//   { id: 'af_nicole', name: 'Nicole (Female)' },
+//   { id: 'af_sarah', name: 'Sarah (Female)' },
+//   { id: 'am_onyx', name: 'Onyx (Male)' },
+//   { id: 'am_echo', name: 'Echo (Male)' },
+//   { id: 'am_fenrir', name: 'Fenrir (Male)' },
+// ];
+
+// export default function UserDashboard() {
+//   const { user, logout } = useAuth();
+//   const [text, setText] = useState('');
+//   const [voice, setVoice] = useState('af_heart');
+//   const [loading, setLoading] = useState(false);
+//   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+//   const [error, setError] = useState('');
+//   const [chars, setChars] = useState(user?.characters_limit || 10000);
+//   const [used, setUsed] = useState(user?.characters_used || 0);
+
+//   useEffect(() => {
+//     if (user) {
+//       setChars(user.characters_limit - user.characters_used);
+//       setUsed(user.characters_used);
+//     }
+//   }, [user]);
+
+//   const charCount = text.length;
+
+//   const generateSpeech = async () => {
+//     if (!text.trim()) {
+//       setError('Please enter some text.');
+//       return;
+//     }
+
+//     if (charCount > chars) {
+//       setError(`Only ${chars} characters left.`);
+//       return;
+//     }
+
+//     setLoading(true);
+//     setError('');
+//     setAudioUrl(null);
+
+//     try {
+//       const token = Cookies.get('access_token');
+//       if (!token) {
+//         setError('Please login again.');
+//         setLoading(false);
+//         return;
+//       }
+
+//     const response = await fetch(`${API_URL}/v1/tts/generate`, {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ text, voice: voice }),
+//       });
+
+//       // ✅ Check if OK before reading blob
+//       if (!response.ok) {
+//         let msg = 'Generation failed';
+//         try {
+//           const err = await response.json();
+//           msg = err.detail || msg;
+//         } catch {
+//           const txt = await response.text();
+//           msg = txt || msg;
+//         }
+//         throw new Error(msg);
+//       }
+
+//       // ✅ Read as BLOB
+//       const blob = await response.blob();
+      
+//       if (blob.size === 0) {
+//         throw new Error('Audio is empty');
+//       }
+
+//       const url = URL.createObjectURL(blob);
+//       setAudioUrl(url);
+
+//       // Update character usage
+//       const usedStr = response.headers.get('X-Characters-Used');
+//       if (usedStr) {
+//         const val = parseInt(usedStr);
+//         setUsed(used + val);
+//         setChars(chars - val);
+//       }
+
+//     } catch (err: any) {
+//       console.error('Error:', err);
+//       setError(err.message || 'Failed to generate speech.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Sample texts for quick testing
+//   const samples = [
+//     'Hello! Welcome to AI Voice Studio.',
+//     'The quick brown fox jumps over the lazy dog.',
+//     'Assalam o Alaikum! Ye AI Voice Studio hai.',
+//   ];
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+//       <div className="max-w-3xl mx-auto">
+//         {/* Header */}
+//         <div className="flex justify-between items-center mb-6">
+//           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+//             🎙️ Voice Studio
+//           </h1>
+//           <div className="flex items-center gap-4">
+//             <span className="text-sm text-gray-600 dark:text-gray-400">
+//               {user?.full_name} | {used} / {user?.characters_limit} chars
+//             </span>
+//             <button
+//               onClick={logout}
+//               className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm"
+//             >
+//               Logout
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Main Card */}
+//         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+//           {error && (
+//             <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 rounded-lg text-sm">
+//               ❌ {error}
+//               <button onClick={() => setError('')} className="ml-2 font-bold">✕</button>
+//             </div>
+//           )}
+
+//           {/* Character counter */}
+//           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
+//             <span>Chars: {charCount}</span>
+//             <span className={charCount > chars ? 'text-red-500 font-bold' : ''}>
+//               Left: {Math.max(0, chars - charCount)}
+//             </span>
+//           </div>
+
+//           {/* Progress bar */}
+//           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
+//             <div
+//               className={`h-2 rounded-full ${charCount > chars ? 'bg-red-500' : 'bg-blue-500'}`}
+//               style={{ width: `${((used + charCount) / (user?.characters_limit || 1)) * 100}%` }}
+//             />
+//           </div>
+
+//           {/* Text input */}
+//           <textarea
+//             rows={4}
+//             value={text}
+//             onChange={(e) => setText(e.target.value)}
+//             placeholder="Type your text here..."
+//             className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-blue-500"
+//           />
+
+//           {/* Sample buttons */}
+//           <div className="mt-2 flex flex-wrap gap-2">
+//             {samples.map((s, i) => (
+//               <button
+//                 key={i}
+//                 onClick={() => setText(s)}
+//                 className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded"
+//               >
+//                 Sample {i+1}
+//               </button>
+//             ))}
+//           </div>
+
+//           {/* Voice selection */}
+//           <div className="mt-4">
+//             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+//               Voice
+//             </label>
+//             <select
+//               value={voice}
+//               onChange={(e) => setVoice(e.target.value)}
+//               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+//             >
+//               {VOICES.map((v) => (
+//                 <option key={v.id} value={v.id}>{v.name}</option>
+//               ))}
+//             </select>
+//           </div>
+
+//           {/* Generate button */}
+//           <button
+//             onClick={generateSpeech}
+//             disabled={loading || !text.trim() || charCount > chars}
+//             className="mt-4 w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition"
+//           >
+//             {loading ? '⏳ Generating...' : '🔊 Generate Speech'}
+//           </button>
+
+//           {/* Audio output */}
+//           {audioUrl && (
+//             <div className="mt-4 p-4 border border-green-300 bg-green-50 dark:bg-green-900/20 rounded-lg">
+//               <audio controls className="w-full" src={audioUrl} autoPlay />
+//               <div className="flex gap-2 mt-2">
+//                 <a
+//                   href={audioUrl}
+//                   download={`speech_${Date.now()}.wav`}
+//                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg"
+//                 >
+//                   ⬇️ Download
+//                 </a>
+//                 <button
+//                   onClick={() => setAudioUrl(null)}
+//                   className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm rounded-lg"
+//                 >
+//                   ✕ Clear
+//                 </button>
+//               </div>
+//             </div>
+//           )}
+
+//           {/* Tips */}
+//           <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+//             💡 Use [happy], [sad], [angry] for emotion. Each char counts toward limit.
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Cookies from 'js-cookie';
 
-// ✅ Direct call to backend (no proxy issues)
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000/api';
 
 const VOICES = [
   { id: 'af_heart', name: 'Heart (Female)' },
@@ -798,7 +1038,7 @@ export default function UserDashboard() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/tts/generate`, {
+      const response = await fetch(`${API_URL}/v1/tts/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -807,7 +1047,6 @@ export default function UserDashboard() {
         body: JSON.stringify({ text, voice: voice }),
       });
 
-      // ✅ Check if OK before reading blob
       if (!response.ok) {
         let msg = 'Generation failed';
         try {
@@ -820,9 +1059,7 @@ export default function UserDashboard() {
         throw new Error(msg);
       }
 
-      // ✅ Read as BLOB
       const blob = await response.blob();
-      
       if (blob.size === 0) {
         throw new Error('Audio is empty');
       }
@@ -830,14 +1067,12 @@ export default function UserDashboard() {
       const url = URL.createObjectURL(blob);
       setAudioUrl(url);
 
-      // Update character usage
       const usedStr = response.headers.get('X-Characters-Used');
       if (usedStr) {
         const val = parseInt(usedStr);
         setUsed(used + val);
         setChars(chars - val);
       }
-
     } catch (err: any) {
       console.error('Error:', err);
       setError(err.message || 'Failed to generate speech.');
@@ -846,7 +1081,6 @@ export default function UserDashboard() {
     }
   };
 
-  // Sample texts for quick testing
   const samples = [
     'Hello! Welcome to AI Voice Studio.',
     'The quick brown fox jumps over the lazy dog.',
@@ -856,25 +1090,18 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            🎙️ Voice Studio
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🎙️ Voice Studio</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {user?.full_name} | {used} / {user?.characters_limit} chars
             </span>
-            <button
-              onClick={logout}
-              className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm"
-            >
+            <button onClick={logout} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">
               Logout
             </button>
           </div>
         </div>
 
-        {/* Main Card */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
           {error && (
             <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 rounded-lg text-sm">
@@ -883,7 +1110,6 @@ export default function UserDashboard() {
             </div>
           )}
 
-          {/* Character counter */}
           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
             <span>Chars: {charCount}</span>
             <span className={charCount > chars ? 'text-red-500 font-bold' : ''}>
@@ -891,7 +1117,6 @@ export default function UserDashboard() {
             </span>
           </div>
 
-          {/* Progress bar */}
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
             <div
               className={`h-2 rounded-full ${charCount > chars ? 'bg-red-500' : 'bg-blue-500'}`}
@@ -899,7 +1124,6 @@ export default function UserDashboard() {
             />
           </div>
 
-          {/* Text input */}
           <textarea
             rows={4}
             value={text}
@@ -908,24 +1132,16 @@ export default function UserDashboard() {
             className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Sample buttons */}
           <div className="mt-2 flex flex-wrap gap-2">
             {samples.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => setText(s)}
-                className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded"
-              >
+              <button key={i} onClick={() => setText(s)} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded">
                 Sample {i+1}
               </button>
             ))}
           </div>
 
-          {/* Voice selection */}
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Voice
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Voice</label>
             <select
               value={voice}
               onChange={(e) => setVoice(e.target.value)}
@@ -937,7 +1153,6 @@ export default function UserDashboard() {
             </select>
           </div>
 
-          {/* Generate button */}
           <button
             onClick={generateSpeech}
             disabled={loading || !text.trim() || charCount > chars}
@@ -946,29 +1161,20 @@ export default function UserDashboard() {
             {loading ? '⏳ Generating...' : '🔊 Generate Speech'}
           </button>
 
-          {/* Audio output */}
           {audioUrl && (
             <div className="mt-4 p-4 border border-green-300 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <audio controls className="w-full" src={audioUrl} autoPlay />
               <div className="flex gap-2 mt-2">
-                <a
-                  href={audioUrl}
-                  download={`speech_${Date.now()}.wav`}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg"
-                >
+                <a href={audioUrl} download={`speech_${Date.now()}.wav`} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">
                   ⬇️ Download
                 </a>
-                <button
-                  onClick={() => setAudioUrl(null)}
-                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm rounded-lg"
-                >
+                <button onClick={() => setAudioUrl(null)} className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm rounded-lg">
                   ✕ Clear
                 </button>
               </div>
             </div>
           )}
 
-          {/* Tips */}
           <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
             💡 Use [happy], [sad], [angry] for emotion. Each char counts toward limit.
           </div>

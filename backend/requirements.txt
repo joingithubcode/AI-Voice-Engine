@@ -72,8 +72,6 @@ optimum==2.2.0
 optimum-intel==2.0.0
 packaging==26.2
 passlib==1.7.4
-phonemizer==3.3.0
-phonemizer-fork==3.3.2
 pillow==12.3.0
 preshed==3.0.13
 protobuf==7.35.1
@@ -140,3 +138,4 @@ weasel==1.0.0
 websockets==16.1.1
 wrapt==2.2.2
 zipp==4.1.0
+phonemizer-fork

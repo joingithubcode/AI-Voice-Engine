@@ -1,3 +1,271 @@
+# # import re
+# # import io
+# # import os
+# # import numpy as np
+# # import soundfile as sf
+# # from kokoro import KPipeline
+# # from app.config import settings
+# # import logging
+# # import warnings
+
+# # warnings.filterwarnings("ignore")
+# # logger = logging.getLogger(__name__)
+
+# # # ✅ VOICE_CATALOG - Sab se pehle define karo
+# # VOICE_CATALOG = {
+# #     # 🇺🇸 American English — Female
+# #     "af_alloy": ("Alloy", "American English", "🇺🇸", "Female"),
+# #     "af_aoede": ("Aoede", "American English", "🇺🇸", "Female"),
+# #     "af_bella": ("Bella", "American English", "🇺🇸", "Female"),
+# #     "af_heart": ("Heart", "American English", "🇺🇸", "Female"),
+# #     "af_jessica": ("Jessica", "American English", "🇺🇸", "Female"),
+# #     "af_kore": ("Kore", "American English", "🇺🇸", "Female"),
+# #     "af_nicole": ("Nicole", "American English", "🇺🇸", "Female"),
+# #     "af_nova": ("Nova", "American English", "🇺🇸", "Female"),
+# #     "af_river": ("River", "American English", "🇺🇸", "Female"),
+# #     "af_sarah": ("Sarah", "American English", "🇺🇸", "Female"),
+# #     "af_sky": ("Sky", "American English", "🇺🇸", "Female"),
+
+# #     # 🇺🇸 American English — Male
+# #     "am_adam": ("Adam", "American English", "🇺🇸", "Male"),
+# #     "am_echo": ("Echo", "American English", "🇺🇸", "Male"),
+# #     "am_eric": ("Eric", "American English", "🇺🇸", "Male"),
+# #     "am_fenrir": ("Fenrir", "American English", "🇺🇸", "Male"),
+# #     "am_liam": ("Liam", "American English", "🇺🇸", "Male"),
+# #     "am_michael": ("Michael", "American English", "🇺🇸", "Male"),
+# #     "am_onyx": ("Onyx", "American English", "🇺🇸", "Male"),
+# #     "am_puck": ("Puck", "American English", "🇺🇸", "Male"),
+# #     "am_santa": ("Santa", "American English", "🇺🇸", "Male"),
+
+# #     # 🇬🇧 British English — Female
+# #     "bf_alice": ("Alice", "British English", "🇬🇧", "Female"),
+# #     "bf_emma": ("Emma", "British English", "🇬🇧", "Female"),
+# #     "bf_isabella": ("Isabella", "British English", "🇬🇧", "Female"),
+# #     "bf_lily": ("Lily", "British English", "🇬🇧", "Female"),
+
+# #     # 🇬🇧 British English — Male
+# #     "bm_daniel": ("Daniel", "British English", "🇬🇧", "Male"),
+# #     "bm_fable": ("Fable", "British English", "🇬🇧", "Male"),
+# #     "bm_george": ("George", "British English", "🇬🇧", "Male"),
+# #     "bm_lewis": ("Lewis", "British English", "🇬🇧", "Male"),
+
+# #     # 🇪🇸 Spanish — Female
+# #     "ef_dora": ("Dora", "Spanish", "🇪🇸", "Female"),
+# #     "ff_siwis": ("Siwis", "French", "🇫🇷", "Female"),
+
+# #     # 🇪🇸 Spanish — Male
+# #     "em_alex": ("Alex", "Spanish", "🇪🇸", "Male"),
+# #     "em_santa": ("Santa", "Spanish", "🇪🇸", "Male"),
+
+# #     # 🇯🇵 Japanese — Female
+# #     "jf_alpha": ("Alpha", "Japanese", "🇯🇵", "Female"),
+# #     "jf_gongitsune": ("Gongitsune", "Japanese", "🇯🇵", "Female"),
+# #     "jf_nezumi": ("Nezumi", "Japanese", "🇯🇵", "Female"),
+# #     "jf_tebukuro": ("Tebukuro", "Japanese", "🇯🇵", "Female"),
+
+# #     # 🇯🇵 Japanese — Male
+# #     "jm_kumo": ("Kumo", "Japanese", "🇯🇵", "Male"),
+
+# #     # 🇨🇳 Chinese — Female
+# #     "zf_xiaobei": ("Xiaobei", "Chinese", "🇨🇳", "Female"),
+# #     "zf_xiaoni": ("Xiaoni", "Chinese", "🇨🇳", "Female"),
+# #     "zf_xiaoxiao": ("Xiaoxiao", "Chinese", "🇨🇳", "Female"),
+# #     "zf_xiaoyi": ("Xiaoyi", "Chinese", "🇨🇳", "Female"),
+
+# #     # 🇨🇳 Chinese — Male
+# #     "zm_yunjian": ("Yunjian", "Chinese", "🇨🇳", "Male"),
+# #     "zm_yunxi": ("Yunxi", "Chinese", "🇨🇳", "Male"),
+# #     "zm_yunxia": ("Yunxia", "Chinese", "🇨🇳", "Male"),
+# #     "zm_yunyang": ("Yunyang", "Chinese", "🇨🇳", "Male"),
+# # }
+
+# # class TTSEngine:
+# #     def __init__(self):
+# #         self.pipeline = None
+# #         self.default_voice = 'af_heart'
+# #         self._load_pipeline()
+
+# #     def _load_pipeline(self):
+# #         try:
+# #             model_path = settings.KOKORO_PATH
+# #             if os.path.exists(model_path):
+# #                 logger.info(f"Loading Kokoro from: {model_path}")
+# #                 self.pipeline = KPipeline(lang_code='a', model=model_path)
+# #             else:
+# #                 logger.warning("Local model not found, loading default...")
+# #                 self.pipeline = KPipeline(lang_code='a')
+# #             logger.info("✅ Kokoro pipeline loaded successfully.")
+# #         except Exception as e:
+# #             logger.error(f"Failed to load Kokoro: {e}")
+# #             self.pipeline = KPipeline(lang_code='a')
+
+# #     def _voice_exists(self, voice: str) -> bool:
+# #         voices_dir = os.path.join(settings.KOKORO_PATH, "voices")
+# #         voice_file = os.path.join(voices_dir, f"{voice}.pt")
+# #         return os.path.exists(voice_file)
+
+# #     def generate(self, text: str, voice: str = None, output_format: str = "wav"):
+# #         if self.pipeline is None:
+# #             self._load_pipeline()
+
+# #         if voice is None:
+# #             voice = self.default_voice
+
+# #         if not self._voice_exists(voice):
+# #             logger.warning(f"Voice '{voice}' not found. Falling back to '{self.default_voice}'")
+# #             voice = self.default_voice
+
+# #         clean_text = re.sub(r'\[.*?\]', '', text).strip()
+# #         if not clean_text:
+# #             raise ValueError("Text is empty after removing tags.")
+
+# #         logger.info(f"Generating with voice: {voice}")
+
+# #         try:
+# #             generator = self.pipeline(clean_text, voice=voice, speed=1.0)
+# #             audio_chunks = []
+# #             for audio, _, _ in generator:
+# #                 audio = np.asarray(audio)
+# #                 if audio.ndim == 0 or audio.size == 0:
+# #                     continue
+# #                 if audio.ndim > 1:
+# #                     audio = audio.flatten()
+# #                 audio_chunks.append(audio)
+
+# #             if not audio_chunks:
+# #                 raise RuntimeError(f"No audio chunks generated for voice '{voice}'. Try a different voice.")
+
+# #             full_audio = np.concatenate(audio_chunks)
+# #             sample_rate = 24000
+# #             duration = len(full_audio) / sample_rate
+
+# #             wav_buffer = io.BytesIO()
+# #             sf.write(wav_buffer, full_audio, sample_rate, format='WAV')
+# #             wav_bytes = wav_buffer.getvalue()
+
+# #             logger.info(f"✅ Audio generated: {duration:.2f}s")
+# #             return wav_bytes, sample_rate, duration
+
+# #         except Exception as e:
+# #             logger.error(f"Audio generation error: {e}")
+# #             raise
+
+# # # ✅ Singleton instance
+# # tts_engine = TTSEngine()
+
+# import re
+# import io
+# import numpy as np
+# import soundfile as sf
+# import logging
+# import warnings
+# import os
+
+# warnings.filterwarnings("ignore")
+# logger = logging.getLogger(__name__)
+
+# # ✅ MeloTTS use karo
+# try:
+#     from melo.api import TTS
+#     MELO_AVAILABLE = True
+#     logger.info("✅ MeloTTS available")
+# except ImportError as e:
+#     logger.error(f"❌ MeloTTS not installed: {e}")
+#     MELO_AVAILABLE = False
+
+# VOICE_CATALOG = {
+#     "en_f1": ("F1 (EN)", "American English", "🇺🇸", "Female"),
+#     "en_f2": ("F2 (EN)", "American English", "🇺🇸", "Female"),
+#     "en_f3": ("F3 (EN)", "American English", "🇺🇸", "Female"),
+#     "en_m1": ("M1 (EN)", "American English", "🇺🇸", "Male"),
+#     "en_m2": ("M2 (EN)", "American English", "🇺🇸", "Male"),
+#     "en_m3": ("M3 (EN)", "American English", "🇺🇸", "Male"),
+# }
+
+# class TTSEngine:
+#     def __init__(self):
+#         self.model = None
+#         self.default_voice = 'en_f1'
+#         self.language_map = {
+#             'en_f1': ('EN', 0),
+#             'en_f2': ('EN', 1),
+#             'en_f3': ('EN', 2),
+#             'en_m1': ('EN', 3),
+#             'en_m2': ('EN', 4),
+#             'en_m3': ('EN', 5),
+#         }
+#         self._load_model()
+
+#     def _load_model(self):
+#         if not MELO_AVAILABLE:
+#             logger.error("❌ MeloTTS not available")
+#             self.model = None
+#             return
+            
+#         try:
+#             logger.info("🔄 Loading MeloTTS model...")
+#             model_path = "/app/models_data/tts/melotts-en"
+            
+#             if os.path.exists(model_path):
+#                 self.model = TTS(language='EN', device='cpu', model_path=model_path)
+#                 logger.info("✅ MeloTTS loaded successfully from local model!")
+#             else:
+#                 logger.warning("Local model not found, downloading default...")
+#                 self.model = TTS(language='EN', device='cpu')
+#                 logger.info("✅ MeloTTS loaded successfully!")
+#         except Exception as e:
+#             logger.error(f"❌ Failed to load MeloTTS: {e}")
+#             self.model = None
+
+#     def generate(self, text: str, voice: str = None, output_format: str = "wav"):
+#         if self.model is None:
+#             raise RuntimeError("TTS engine not initialized")
+
+#         if voice is None:
+#             voice = self.default_voice
+
+#         clean_text = re.sub(r'\[.*?\]', '', text).strip()
+#         if not clean_text:
+#             raise ValueError("Text is empty")
+
+#         logger.info(f"🎤 Generating with voice: {voice}")
+
+#         try:
+#             lang, speaker_id = self.language_map.get(voice, ('EN', 0))
+#             audio = self.model.tts_to_file(
+#                 text=clean_text,
+#                 speaker_id=speaker_id,
+#                 output_path=None
+#             )
+            
+#             # Agar audio numpy array hai toh
+#             if isinstance(audio, np.ndarray):
+#                 audio_array = audio
+#             else:
+#                 audio_array, sample_rate = sf.read(audio)
+#                 os.remove(audio)
+            
+#             sample_rate = 24000
+#             duration = len(audio_array) / sample_rate
+
+#             wav_buffer = io.BytesIO()
+#             sf.write(wav_buffer, audio_array, sample_rate, format='WAV')
+#             wav_bytes = wav_buffer.getvalue()
+
+#             logger.info(f"✅ Audio generated: {duration:.2f}s")
+#             return wav_bytes, sample_rate, duration
+
+#         except Exception as e:
+#             logger.error(f"❌ Generation error: {e}")
+#             raise
+
+# # ✅ Singleton instance
+# try:
+#     tts_engine = TTSEngine()
+# except Exception as e:
+#     logger.error(f"❌ Failed to initialize TTSEngine: {e}")
+#     tts_engine = None
+
 import os
 import glob
 
